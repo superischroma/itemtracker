@@ -4,9 +4,10 @@ import time
 import numpy
 from win10toast import ToastNotifier
 
-PERIOD = 1
+PERIOD: int = 1
 
 items: dict[str, list[int]] = {"Ender Artifact": [], "Bedrock": []}
+toast: ToastNotifier = ToastNotifier()
 
 def req_ah(page: int=0):
     conn = http.client.HTTPSConnection("api.hypixel.net", 443)
@@ -20,8 +21,8 @@ def req_ah(page: int=0):
     return json.loads(resp.read().decode())
 
 def send_notif(message: str, duration: int=5):
-    toast.show_toast("Item Tracker", message, duration=duration, icon_path="icon.ico")
     print(f"[Notification] {message}")
+    toast.show_toast("Item Tracker", message, duration=duration, icon_path="icon.ico")
 
 def wait(secs):
     t = time.time()
@@ -32,7 +33,6 @@ def wait(secs):
         time.sleep(10)
     time.sleep(5)
 
-toast = ToastNotifier()
 while True:
     test = req_ah()
     if test is None:
@@ -66,7 +66,9 @@ while True:
         else:
             q3, q1 = numpy.percentile(items[item], [75, 25])
             iqr = q3 - q1
-            items[item] = [i for i in items[item] if q1 - iqr * 1.5 < i < q3 + iqr * 1.5]
+            filtered = [i for i in items[item] if q1 - iqr * 1.5 < i < q3 + iqr * 1.5]
+            if len(filtered) != 0:
+                items[item] = filtered
             send_notif(f"{item}: {(sum(items[item]) / len(items[item])):,.0f} coins")
         items[item].clear()
     next_update = time.localtime(time.time() + 3600)
