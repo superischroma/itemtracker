@@ -1,6 +1,7 @@
 import http.client
 import json
 import time
+import numpy
 from win10toast import ToastNotifier
 
 PERIOD = 1
@@ -62,6 +63,9 @@ while True:
         if len(items[item]) == 0:
             send_notif(f"No {item}s found currently", 3)
         else:
+            q3, q1 = numpy.percentile(items[item], [75, 25])
+            iqr = q3 - q1
+            items[item] = [i for i in items[item] if q1 - iqr * 1.5 < i < q3 + iqr * 1.5]
             send_notif(f"{item}: {(sum(items[item]) / len(items[item])):,.0f} coins")
         items[item].clear()
     next_update = time.localtime(time.time() + 3600)
