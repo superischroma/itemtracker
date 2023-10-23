@@ -23,20 +23,21 @@ def send_notif(message: str, duration: int=5):
     toast.show_toast("Item Tracker", message, duration=duration, icon_path="icon.ico")
     print(f"[Notification] {message}")
 
-def wait_hour():
+def wait(secs):
     t = time.time()
-    while time.time() < t + 3600:
-        time_diff = time.gmtime(t + 3600 - time.time())
-        next_update = time.localtime(t + 3600)
+    while time.time() < t + secs:
+        time_diff = time.gmtime(t + secs - time.time())
+        next_update = time.localtime(t + secs)
         print(f"{time_diff.tm_hour}:{time_diff.tm_min:02}:{time_diff.tm_sec:02} left until next update ({next_update.tm_hour}:{next_update.tm_min:02}:{next_update.tm_sec:02})")
         time.sleep(10)
+    time.sleep(5)
 
 toast = ToastNotifier()
 while True:
     test = req_ah()
     if test is None:
         send_notif("Hypixel API down", 3)
-        wait_hour()
+        wait(300)
         continue
     send_notif("Pulling item data...", 3)
     pages = int(test["totalPages"])
@@ -57,7 +58,7 @@ while True:
             if item_name in items:
                 items[item_name].append(auction["starting_bid"])
     if broke:
-        wait_hour()
+        wait(300)
         continue
     for item in items:
         if len(items[item]) == 0:
@@ -70,4 +71,4 @@ while True:
         items[item].clear()
     next_update = time.localtime(time.time() + 3600)
     send_notif(f"Next update at {next_update.tm_hour}:{next_update.tm_min:02}:{next_update.tm_sec:02}", 3)
-    wait_hour()
+    wait(3600)
